@@ -44,6 +44,7 @@ async function getPostData(slug) {
       content: post.content,
       image: post.image,
       author: post.author,
+      excerpt: post.excerpt,
       date: new Date(post.createdAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -86,6 +87,13 @@ export default async function BlogPostPage({ params }) {
       <p className="mb-6 text-sm text-slate-400">
         By {post.author} / {post.date}
       </p>
+
+      {/* Excerpt */}
+      {post.excerpt && (
+        <p className="mb-8 text-lg text-slate-600 leading-relaxed">
+          {post.excerpt}
+        </p>
+      )}
 
       {/* Featured Image */}
       <div className="mb-8 overflow-hidden rounded-2xl">
