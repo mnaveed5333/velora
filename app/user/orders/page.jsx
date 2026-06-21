@@ -39,6 +39,8 @@ function formatDateTime(dateString) {
   return `${datePart} at ${timePart}`;
 }
 
+const isHex = (v) => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v?.trim());
+
 function OrderReviewForm({ order, onSubmitted }) {
   const [received, setReceived] = useState(true);
   const [rating, setRating] = useState(0);
@@ -367,13 +369,27 @@ export default function MyOrdersPage() {
 
                   <div className="divide-y divide-gray-100">
                     {order.items.map((item, i) => {
-                      const variant = [item.size, item.color].filter(Boolean).join(", ");
                       const matches = query && item.name.toLowerCase().includes(query);
                       return (
                         <div key={i} className="flex items-center justify-between py-2.5 text-sm">
-                          <span className={matches ? "font-semibold text-primary" : "text-ink"}>
+                          <span className={`flex flex-wrap items-center gap-1.5 ${matches ? "font-semibold text-primary" : "text-ink"}`}>
                             {item.name}
-                            {variant && <span className="text-gray-500"> ({variant})</span>}
+                            {item.size && (
+                              <span className="inline-flex items-center rounded border border-gray-200 bg-bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-gray-500">
+                                {item.size}
+                              </span>
+                            )}
+                            {item.color && (
+                              isHex(item.color) ? (
+                                <span
+                                  className="inline-block h-3.5 w-3.5 flex-shrink-0 rounded-full border border-black/10 shadow-sm"
+                                  style={{ backgroundColor: item.color.trim() }}
+                                  title={item.color}
+                                />
+                              ) : (
+                                <span className="text-[11px] text-gray-500">{item.color}</span>
+                              )
+                            )}
                             <span className="text-gray-500"> × {item.quantity}</span>
                           </span>
                           <span className="font-medium text-ink">
