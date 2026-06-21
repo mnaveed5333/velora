@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Users, Package, ClipboardList, Newspaper, Mail, Plus, Menu, X } from "lucide-react";
@@ -25,6 +25,21 @@ export default function AdminHeader() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
   };
+
+  // Lock body scroll while the drawer is open, and allow Escape to close it
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileOpen]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
@@ -83,17 +98,48 @@ export default function AdminHeader() {
         {/* Mobile menu toggle */}
         <button
           type="button"
-          onClick={() => setMobileOpen((v) => !v)}
+          onClick={() => setMobileOpen(true)}
           className="flex h-9 w-9 items-center justify-center rounded-md text-ink transition-colors hover:bg-bg-secondary md:hidden"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-label="Open menu"
+          aria-expanded={mobileOpen}
         >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          <Menu size={20} />
         </button>
       </div>
 
-      {/* Mobile nav panel */}
-      {mobileOpen && (
-        <nav className="flex flex-col gap-1 border-t border-gray-200 bg-white px-4 py-3 md:hidden">
+      {/* Backdrop */}
+      <div
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 md:hidden ${
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      {/* Right-side slide-in drawer */}
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Admin navigation"
+        className={`fixed inset-y-0 right-0 z-40 flex w-[78%] max-w-xs flex-col bg-white shadow-2xl transition-transform duration-300 ease-out md:hidden ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <span className="text-sm font-semibold uppercase tracking-[0.15em] text-gray-500">
+            Menu
+          </span>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-bg-secondary hover:text-ink"
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -102,22 +148,24 @@ export default function AdminHeader() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-colors ${
                   active
                     ? "bg-bg-secondary text-primary"
                     : "text-gray-600 hover:bg-gray-50 hover:text-ink"
                 }`}
               >
-                <Icon size={16} />
+                <Icon size={17} />
                 {item.label}
               </Link>
             );
           })}
+        </nav>
 
+        <div className="flex flex-col gap-2 border-t border-gray-200 px-3 py-4">
           <Link
             href="/admin/dashboard/products/new"
             onClick={() => setMobileOpen(false)}
-            className="mt-1 flex items-center gap-2.5 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover"
+            className="flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
             <Plus size={16} />
             Upload
@@ -128,13 +176,13 @@ export default function AdminHeader() {
               setMobileOpen(false);
               handleLogout();
             }}
-            className="mt-1 flex items-center gap-2.5 rounded-md border-t border-gray-100 px-3 py-2.5 pt-3.5 text-sm font-medium text-gray-500 hover:text-primary"
+            className="flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-bg-secondary hover:text-primary"
           >
             <LogOut size={16} />
             Logout
           </button>
-        </nav>
-      )}
+        </div>
+      </aside>
     </header>
   );
 }

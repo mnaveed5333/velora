@@ -4,10 +4,11 @@ import { useState } from "react";
 import OrderRow from "./OrderRow";
 import OrderDetails from "./OrderDetails";
 
-export default function OrdersTable({ orders, onVerify, onShipped }) {
+export default function OrdersTable({ orders, onVerify, onShipped, onDeleted }) {
   const [expandedId, setExpandedId] = useState(null);
   const [verifyingId, setVerifyingId] = useState(null);
   const [shippingId, setShippingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [contactInputs, setContactInputs] = useState({});
 
   if (!orders || orders.length === 0) {
@@ -68,6 +69,27 @@ export default function OrdersTable({ orders, onVerify, onShipped }) {
     }
   };
 
+  const handleDelete = async (orderId) => {
+    if (!confirm("Delete this order? This cannot be undone.")) return;
+    setDeletingId(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/delete`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete order.");
+        return;
+      }
+      if (expandedId === orderId) setExpandedId(null);
+      onDeleted && onDeleted(orderId);
+    } catch {
+      alert("Something went wrong.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       {/* gap-5 = 20px between order cards */}
@@ -96,6 +118,8 @@ export default function OrdersTable({ orders, onVerify, onShipped }) {
                 onShip={handleShip}
                 verifying={verifyingId === order._id}
                 shipping={shippingId === order._id}
+                onDelete={handleDelete}
+                deleting={deletingId === order._id}
               />
             )}
           </div>
