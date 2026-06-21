@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 
 function formatDateTime(dateString) {
   const d = new Date(dateString);
@@ -16,7 +17,8 @@ function formatDateTime(dateString) {
   return `${datePart} · ${timePart}`;
 }
 
-export default function OrderRow({ order, isExpanded, onToggle }) {
+export default function OrderRow({ order }) {
+  const router = useRouter();
   const needsVerification =
     order.paymentMethod === "transfer" && order.paymentStatus === "pending";
   const isShipped = order.status === "shipped";
@@ -31,7 +33,7 @@ export default function OrderRow({ order, isExpanded, onToggle }) {
 
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => router.push(`/admin/dashboard/orders/${order._id}`)}
         className="grid w-full grid-cols-1 gap-2 px-6 py-4 pl-7 text-left text-sm transition hover:bg-bg-secondary sm:grid-cols-[2fr_1.5fr_1fr_1.2fr_auto] sm:items-center sm:gap-4"
       >
         <span className="flex flex-wrap items-center gap-2 font-semibold text-ink">
@@ -57,7 +59,7 @@ export default function OrderRow({ order, isExpanded, onToggle }) {
         </span>
         <span className="text-gray-500">{formatDateTime(order.createdAt)}</span>
         <span className="flex justify-end text-gray-400">
-          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <ChevronRight size={16} />
         </span>
       </button>
     </div>

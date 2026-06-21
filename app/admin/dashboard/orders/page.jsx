@@ -42,35 +42,6 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [router]);
 
-  const handleVerify = async (orderId) => {
-    try {
-      const res = await fetch("/api/admin/orders/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "Failed to verify order.");
-        return;
-      }
-      await fetchOrders();
-    } catch {
-      alert("Something went wrong verifying this order.");
-    }
-  };
-
-  // Handles the order returned by /ship, merges it into state
-  const handleOrderUpdated = (orderId, updatedOrder) => {
-    if (!updatedOrder) {
-      fetchOrders();
-      return;
-    }
-    setOrders((prev) =>
-      prev.map((o) => (o._id === orderId ? { ...o, ...updatedOrder } : o))
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -93,8 +64,6 @@ export default function AdminOrdersPage() {
             </p>
           </div>
 
-          {/* Manual refresh — picks up customer-submitted reviews and any
-              other changes made outside this tab (e.g. on /user/orders) */}
           <button
             type="button"
             onClick={() => fetchOrders({ silent: true })}
@@ -108,11 +77,7 @@ export default function AdminOrdersPage() {
 
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-        <OrdersTable
-          orders={orders}
-          onVerify={handleVerify}
-          onShipped={handleOrderUpdated}
-        />
+        <OrdersTable orders={orders} />
       </div>
     </>
   );

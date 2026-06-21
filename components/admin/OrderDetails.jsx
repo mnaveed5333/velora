@@ -37,7 +37,7 @@ export default function OrderDetails({
   const hasReview = !!order.review?.submittedAt;
 
   return (
-    <div className="border-t border-dashed border-gray-200 bg-bg-secondary px-6 py-6 pl-7">
+    <div className="bg-bg-secondary px-6 py-6">
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Billing */}
         <div>

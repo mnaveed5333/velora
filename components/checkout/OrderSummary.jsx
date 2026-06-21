@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { openAuthModal } from "@/store/slices/authSlice";
 import PaymentSelector from "./PaymentSelector";
 
 const isHex = (v) => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v?.trim());
@@ -47,8 +49,16 @@ function closestColorName(hex) {
 
 export default function OrderSummary({ items, subtotal, onPlaceOrder, onGoToTransfer, placing }) {
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const dispatch = useDispatch();
+
+  const { user, loading: authLoading } = useSelector((state) => state.auth);
+  const isLoggedIn = Boolean(user);
 
   const handleAction = () => {
+    if (!isLoggedIn) {
+      dispatch(openAuthModal("login"));
+      return;
+    }
     if (paymentMethod === "cod") {
       onPlaceOrder("cod");
     } else {
@@ -57,6 +67,7 @@ export default function OrderSummary({ items, subtotal, onPlaceOrder, onGoToTran
   };
 
   const buttonLabel = () => {
+    if (!isLoggedIn) return "Login to Checkout";
     if (placing) return "Placing order...";
     if (paymentMethod === "cod") return `Place Order $${subtotal.toFixed(2)}`;
     return "Proceed to Account Transfer";
@@ -133,10 +144,24 @@ export default function OrderSummary({ items, subtotal, onPlaceOrder, onGoToTran
 
         <PaymentSelector selected={paymentMethod} onChange={setPaymentMethod} />
 
+        {!authLoading && !isLoggedIn && (
+          <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            You need to{" "}
+            <button
+              type="button"
+              onClick={() => dispatch(openAuthModal("login"))}
+              className="font-semibold underline underline-offset-2 hover:text-amber-800"
+            >
+              log in
+            </button>{" "}
+            before you can complete your order.
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleAction}
-          disabled={placing || items.length === 0}
+          disabled={placing || items.length === 0 || authLoading}
           className="mt-6 w-full rounded-full bg-primary py-3.5 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {buttonLabel()}

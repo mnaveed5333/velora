@@ -33,6 +33,10 @@ export default function TransferPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     const stored = sessionStorage.getItem("pendingTransferOrder");
     if (!stored) {
       router.replace("/checkout");

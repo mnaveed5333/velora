@@ -20,9 +20,7 @@ const COLOR_NAME_MAP = {
 function resolveColor(color) {
   if (!color) return null;
   const trimmed = color.trim();
-  // If it looks like a hex code already, use it directly
   if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(trimmed)) return trimmed;
-  // Otherwise look it up by name
   return COLOR_NAME_MAP[trimmed.toLowerCase()] ?? null;
 }
 
@@ -58,8 +56,9 @@ export default function CartTable({ items }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-      {/* Header */}
-      <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 border-b border-slate-100 bg-bg-secondary px-6 py-4">
+      {/* Header — only on sm+ */}
+      <div className="hidden sm:grid grid-cols-[auto_2fr_1fr_1fr_1fr] gap-4 border-b border-slate-100 bg-bg-secondary px-6 py-4">
+        <span />
         {["Product", "Price", "Quantity", "Subtotal"].map((h) => (
           <span key={h} className="text-xs font-semibold uppercase tracking-widest text-slate-400">
             {h}
@@ -77,21 +76,21 @@ export default function CartTable({ items }) {
           return (
             <div
               key={item.lineKey}
-              className="group grid grid-cols-[auto_2fr_1fr_1fr_1fr] items-center gap-4 px-6 py-5 transition-colors hover:bg-slate-50/50"
+              className="group relative flex flex-col gap-4 px-4 py-5 transition-colors hover:bg-slate-50/50 sm:grid sm:grid-cols-[auto_2fr_1fr_1fr_1fr] sm:items-center sm:gap-4 sm:px-6"
             >
               {/* Remove */}
               <button
                 type="button"
                 onClick={() => dispatch(removeFromCart(item.lineKey))}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-300 opacity-0 transition-all group-hover:opacity-100 hover:border-red-200 hover:bg-red-50 hover:text-red-400"
+                className="absolute right-4 top-5 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-slate-300 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-400 sm:static sm:right-auto sm:top-auto sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label={`Remove ${item.name}`}
               >
                 <X size={12} strokeWidth={2.5} />
               </button>
 
               {/* Product */}
-              <div className="flex items-center gap-4">
-                <div className="h-[68px] w-[68px] flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-4 pr-8 sm:pr-0">
+                <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 sm:h-[68px] sm:w-[68px]">
                   <img
                     src={item.image}
                     alt={item.name}
@@ -103,14 +102,12 @@ export default function CartTable({ items }) {
 
                   {(hasSize || hasColor) && (
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      {/* Size badge */}
                       {hasSize && (
                         <span className="inline-flex h-5 items-center rounded-md bg-slate-100 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                           {item.size}
                         </span>
                       )}
 
-                      {/* Color swatch — circle only, no hex text */}
                       {hasColor && (
                         <span className="inline-flex items-center">
                           <ColorSwatch color={item.color} />
@@ -118,46 +115,54 @@ export default function CartTable({ items }) {
                       )}
                     </div>
                   )}
+
+                  {/* Price shown inline on mobile */}
+                  <p className="mt-1 text-sm text-slate-500 sm:hidden">
+                    ${Number(item.price).toFixed(2)}
+                  </p>
                 </div>
               </div>
 
-              {/* Price */}
-              <span className="text-sm text-slate-500">
+              {/* Price — desktop only column */}
+              <span className="hidden text-sm text-slate-500 sm:block">
                 ${Number(item.price).toFixed(2)}
               </span>
 
-              {/* Quantity stepper */}
-              <div className="flex h-9 w-[104px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch(updateQuantity({ lineKey: item.lineKey, quantity: item.quantity - 1 }))
-                  }
-                  disabled={item.quantity <= 1}
-                  className="flex h-full w-9 items-center justify-center text-slate-400 transition hover:bg-slate-50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus size={12} strokeWidth={2.5} />
-                </button>
-                <span className="flex-1 select-none text-center text-sm font-semibold text-ink">
-                  {item.quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch(updateQuantity({ lineKey: item.lineKey, quantity: item.quantity + 1 }))
-                  }
-                  className="flex h-full w-9 items-center justify-center text-slate-400 transition hover:bg-slate-50 hover:text-primary"
-                  aria-label="Increase quantity"
-                >
-                  <Plus size={12} strokeWidth={2.5} />
-                </button>
-              </div>
+              {/* Bottom row on mobile: quantity + subtotal */}
+              <div className="flex items-center justify-between sm:contents">
+                {/* Quantity stepper */}
+                <div className="flex h-9 w-[104px] items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatch(updateQuantity({ lineKey: item.lineKey, quantity: item.quantity - 1 }))
+                    }
+                    disabled={item.quantity <= 1}
+                    className="flex h-full w-9 items-center justify-center text-slate-400 transition hover:bg-slate-50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus size={12} strokeWidth={2.5} />
+                  </button>
+                  <span className="flex-1 select-none text-center text-sm font-semibold text-ink">
+                    {item.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatch(updateQuantity({ lineKey: item.lineKey, quantity: item.quantity + 1 }))
+                    }
+                    className="flex h-full w-9 items-center justify-center text-slate-400 transition hover:bg-slate-50 hover:text-primary"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus size={12} strokeWidth={2.5} />
+                  </button>
+                </div>
 
-              {/* Subtotal */}
-              <span className="text-sm font-bold text-ink">
-                ${lineTotal.toFixed(2)}
-              </span>
+                {/* Subtotal */}
+                <span className="text-sm font-bold text-ink">
+                  ${lineTotal.toFixed(2)}
+                </span>
+              </div>
             </div>
           );
         })}

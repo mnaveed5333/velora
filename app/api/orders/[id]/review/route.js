@@ -25,6 +25,7 @@ export async function POST(req, { params }) {
         { status: 400 }
       );
     }
+
     if (!rating || rating < 1 || rating > 5) {
       return NextResponse.json(
         { error: "Please select a star rating." },
@@ -50,6 +51,7 @@ export async function POST(req, { params }) {
       console.log("[review] USER MISMATCH — order.userId:", order.userId.toString(), "vs userId:", userId);
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
+
     if (order.status !== "shipped") {
       console.log("[review] STATUS MISMATCH — order.status:", order.status);
       return NextResponse.json(
@@ -65,16 +67,21 @@ export async function POST(req, { params }) {
       submittedAt: new Date(),
     };
 
+    // Submitting feedback marks the order as completed
+    order.status = "completed";
+
     console.log("[review] order.review AFTER assign (in memory):", order.review);
+    console.log("[review] order.status AFTER assign (in memory):", order.status);
     console.log("[review] is order.isModified('review')?", order.isModified("review"));
 
     const savedDoc = await order.save();
-
     console.log("[review] SAVE COMPLETED");
     console.log("[review] savedDoc.review (returned from .save()):", savedDoc.review);
+    console.log("[review] savedDoc.status (returned from .save()):", savedDoc.status);
 
     const refetched = await Order.findById(id).lean();
     console.log("[review] RE-FETCHED FROM DB:", JSON.stringify(refetched.review));
+    console.log("[review] RE-FETCHED status:", refetched.status);
     console.log("[review] === END ===");
 
     const plain = order.toObject();

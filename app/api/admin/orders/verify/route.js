@@ -25,7 +25,7 @@ export async function POST(req) {
     order.verifiedBy = adminEmail || "admin";
     await order.save();
 
-    return NextResponse.json({ success: true, order: { _id: order._id.toString() } });
+    return NextResponse.json({ success: true, order: order.toObject() });
   } catch (err) {
     console.error("Order verify error:", err);
     return NextResponse.json(
